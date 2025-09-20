@@ -1,0 +1,282 @@
+<!doctype html> <!-- Declares this is an HTML5 document -->
+<html lang="en"> <!-- Sets the page language to English -->
+<head>
+    <meta charset="utf-8"/> <!-- Character encoding: UTF-8 supports most symbols -->
+    <meta name="viewport" content="width=device-width,initial-scale=1"/> <!-- Makes layout responsive on mobile -->
+    <title>Interactive Image - Earth's Layers</title> <!-- Browser tab title -->
+
+    <style>
+        /* Global variable: size of hotspots (default 46px) */
+        :root{
+            --hot-size:46px;
+        }
+
+        /* Styles for the entire page */
+        body{
+            margin:0; /* Remove default margins */
+            min-height:100vh; /* Fill full viewport height */
+            display:flex; /* Enable flexbox for centering */
+            align-items:center; /* Vertically center content */
+            justify-content:center; /* Horizontally center content */
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; /* Font stack */
+            background:#f6f7f9; /* Light gray background */
+            padding:28px; /* Space around page edges */
+        }
+
+        /* Container for everything */
+        .container{
+            text-align:center; /* Center align text inside */
+            max-width:920px; /* Limit width */
+            width:100%; /* Full width until max */
+        }
+
+        /* Page title styling */
+        h1{
+            margin:0 0 16px; /* Bottom spacing */
+            font-weight:800; /* Bold */
+            letter-spacing:1px; /* Slightly spaced letters */
+        }
+
+        /* Wrap holds image + hotspots */
+        .wrap{
+            display:inline-block;
+            position:relative; /* Needed so hotspots can be positioned absolutely inside */
+            border-radius:10px;
+            overflow:visible;
+        }
+
+        /* Main image (responsive with max width) */
+        #mainImage{
+            display:block;
+            width:100%;
+            max-width:820px;
+            height:auto;
+            border-radius:10px; /* Rounded corners */
+            box-shadow:0 10px 28px rgba(0,0,0,.12); /* Subtle shadow */
+        }
+
+        /* Hotspot buttons (numbers 1,2,3,4) */
+        .hotspot{
+            position:absolute; /* Positioned relative to .wrap */
+            width:var(--hot-size); /* Uses CSS variable */
+            height:var(--hot-size);
+            border-radius:50%; /* Circle shape */
+            transform:translate(-50%,-50%); /* Centers on x,y coordinates */
+            display:flex; align-items:center; justify-content:center; /* Center text inside */
+            cursor:pointer; /* Pointer cursor */
+            border:3px solid #fff; /* White outline */
+            background:rgba(0,0,0,.36); /* Transparent black background */
+            color:#fff; /* White text */
+            font-weight:800; /* Bold text */
+            font-size:16px;
+            box-shadow:0 8px 22px rgba(0,0,0,.18); /* Drop shadow */
+        }
+
+        /* Hidden overlay that covers the image when hotspot clicked */
+        .imageOverlay{
+            position:absolute; /* Inside .wrap */
+            top:0; left:0; /* Cover entire wrap */
+            width:100%; height:100%;
+            border-radius:10px;
+            display:none; /* Hidden until activated */
+            z-index:1000; /* Stays above hotspots */
+            overflow:hidden;
+            box-shadow:0 20px 60px rgba(0,0,0,.35);
+        }
+
+        /* Overlay background image layer */
+        .imageOverlay .overlayLayer{
+            position:absolute;
+            inset:0; /* Shorthand for top/right/bottom/left=0 */
+            background-repeat:no-repeat;
+            background-position:center;
+            background-size:cover;
+            will-change: background-position, background-size, opacity; /* Performance optimization */
+        }
+
+        /* Panel with text content (title + desc) inside overlay */
+        .imageOverlay .panelContent{
+            position:absolute;
+            left:12px; right:12px; bottom:12px; /* Stick to bottom */
+            color:#fff; /* White text */
+            text-shadow:0 6px 22px rgba(0,0,0,.6); /* Glow for readability */
+            pointer-events:none; /* Makes text not clickable */
+        }
+
+        /* Title text inside overlay */
+        .imageOverlay .title{
+            font-size:18px;
+            font-weight:800;
+            margin-bottom:6px;
+        }
+
+        /* Description text inside overlay */
+        .imageOverlay .desc{
+            font-size:13px;
+            font-weight:600;
+            opacity:.95;
+        }
+
+        /* Close button in overlay */
+        .imageOverlay .closeBtn{
+            position:absolute;
+            right:8px; top:8px; /* Top-right corner */
+            z-index:1010; /* Above everything */
+            background:#fff;
+            border:0;
+            padding:6px 8px;
+            border-radius:8px;
+            cursor:pointer;
+            font-weight:700;
+        }
+
+        /* Responsive: make hotspots smaller on narrow screens */
+        @media (max-width:720px){
+            :root{ --hot-size:40px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Interactive Image</h1>
+
+    <div class="wrap" id="wrap">
+        <!-- Main image -->
+        <img id="mainImage" src="https://s2.ezgif.com/tmp/ezgif-2e44ddf887268.png" alt="Earth layers">
+
+        <!-- Hotspots (numbers 1–4) with coordinates and overlay image references -->
+        <button class="hotspot" style="left:60%; top:40%;"
+                data-overlay="https://s2.ezgif.com/tmp/ezgif-220b2fc938794.png"
+                data-overlay-size="cover" data-overlay-opacity="1">1</button>
+
+        <button class="hotspot" style="left:62%; top:67%;"
+                data-overlay="https://s2.ezgif.com/tmp/ezgif-285d5891cc585.png"
+                data-overlay-size="cover" data-overlay-opacity="1">2</button>
+
+        <button class="hotspot" style="left:40%; top:70%;"
+                data-overlay="https://s2.ezgif.com/tmp/ezgif-2822191457ada.png"
+                data-overlay-size="cover" data-overlay-opacity="1">3</button>
+
+        <button class="hotspot" style="left:38%; top:43%;"
+                data-overlay="https://i.postimg.cc/Kvc553t8/Crust.png"
+                data-overlay-size="cover" data-overlay-opacity="1">4</button>
+
+        <!-- Overlay structure (initially hidden) -->
+        <div class="imageOverlay" id="imageOverlay" aria-hidden="true">
+            <button class="closeBtn" id="overlayClose">✕</button> <!-- Close button -->
+            <div class="overlayLayer" id="overlayLayer"></div> <!-- Background image -->
+            <div class="panelContent">
+                <div class="title" id="overlayTitle"></div> <!-- Filled dynamically -->
+                <div class="desc" id="overlayDesc"></div> <!-- Filled dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){ // Immediately invoked function expression (IIFE) to avoid globals
+        // Get references to DOM elements
+        const wrap = document.getElementById('wrap');
+        const img = document.getElementById('mainImage');
+        const hotspots = document.querySelectorAll('.hotspot');
+        const overlay = document.getElementById('imageOverlay');
+        const overlayLayer = document.getElementById('overlayLayer');
+        const overlayTitle = document.getElementById('overlayTitle');
+        const overlayDesc = document.getElementById('overlayDesc');
+        const overlayClose = document.getElementById('overlayClose');
+
+        // Function to show overlay when a hotspot is clicked
+        function showOverlayForHotspot(hs){
+            overlay.style.display = 'block'; // Make overlay visible
+            overlay.setAttribute('aria-hidden','false'); // Accessibility flag
+
+            // Get data-* attributes from clicked hotspot
+            const overlayUrl = hs.dataset.overlay || null;
+            const size = hs.dataset.overlaySize || 'cover';
+            const posRaw = hs.dataset.overlayPos;
+            const opacity = hs.dataset.overlayOpacity ? parseFloat(hs.dataset.overlayOpacity) : 1;
+            const title = hs.dataset.title || '';
+            const desc = hs.dataset.desc || '';
+
+            // Insert title/desc into overlay
+            overlayTitle.textContent = title;
+            overlayDesc.textContent = desc;
+
+            // If hotspot has overlay image, apply it
+            if(overlayUrl){
+                overlayLayer.style.backgroundImage = `url("${overlayUrl}")`;
+
+                // Handle background size (cover/contain/percentage)
+                if(size === 'cover' || size === 'contain'){
+                    overlayLayer.style.backgroundSize = size;
+                } else if(!isNaN(parseFloat(size))){
+                    overlayLayer.style.backgroundSize = `${parseFloat(size)}%`;
+                } else {
+                    overlayLayer.style.backgroundSize = 'cover';
+                }
+
+                // Handle optional position
+                if(posRaw){
+                    const parts = posRaw.split(',').map(p => p.trim());
+                    if(parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])){
+                        overlayLayer.style.backgroundPosition = `${parts[0]}% ${parts[1]}%`;
+                    } else {
+                        overlayLayer.style.backgroundPosition = '50% 50%';
+                    }
+                } else {
+                    overlayLayer.style.backgroundPosition = '50% 50%';
+                }
+
+                overlayLayer.style.opacity = String(opacity);
+            } else {
+                // No overlay? Clear it
+                overlayLayer.style.backgroundImage = '';
+                overlayLayer.style.opacity = '0';
+            }
+
+            // Animate overlay appearance
+            overlay.style.opacity = '0';
+            overlay.style.transform = 'scale(.99)';
+            requestAnimationFrame(()=> {
+                overlay.style.opacity = '1';
+                overlay.style.transform = 'scale(1)';
+            });
+        }
+
+        // Function to hide overlay
+        function hideOverlay(){
+            overlay.style.opacity = '0';
+            overlay.style.transform = 'scale(.98)'; // Shrinks slightly
+            overlay.setAttribute('aria-hidden','true');
+            setTimeout(()=> { overlay.style.display = 'none'; }, 160); // After animation ends
+        }
+
+        // Add click events to each hotspot
+        hotspots.forEach(hs => {
+            hs.addEventListener('click', (ev) => {
+                ev.stopPropagation(); // Prevent event bubbling
+                showOverlayForHotspot(hs); // Show overlay for that hotspot
+            });
+        });
+
+        // Close button hides overlay
+        overlayClose.addEventListener('click', (e) => {
+            e.stopPropagation();
+            hideOverlay();
+        });
+
+        // Clicking outside overlay closes it
+        document.addEventListener('click', (e) => {
+            // If clicking outside wrap → close
+            if(overlay.style.display === 'block' && !wrap.contains(e.target)) hideOverlay();
+            // If clicking on image (but not hotspot) → close
+            if(overlay.style.display === 'block' && !overlay.contains(e.target) && wrap.contains(e.target) && !e.target.classList.contains('hotspot')) hideOverlay();
+        });
+
+        // Pressing ESC key closes overlay
+        document.addEventListener('keydown', (e) => { if(e.key === 'Escape') hideOverlay(); });
+
+    })(); // End of IIFE
+</script>
+</body>
+</html>
